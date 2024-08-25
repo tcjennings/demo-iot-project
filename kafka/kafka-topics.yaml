@@ -1,0 +1,10 @@
+---
+apiVersion: "kafka.jikkou.io/v1beta2"
+kind: "KafkaTopic"
+metadata:
+  name: "local.iot.sensor.readings"
+spec:
+  partitions: 12
+  replicas: 1
+  configs:
+    min.insync.replicas: 1

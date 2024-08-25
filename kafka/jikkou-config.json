@@ -1,0 +1,13 @@
+{
+  "currentContext" : "iot",
+  "iot" : {
+    "configProps" : {
+      "kafka.client.bootstrap.servers": "localhost:29092",
+      "kafka.client.security.protocol": "SSL",
+      "kafka.client.ssl.keystore.location": "../cert/admin_ssl_keystore_location.pem",
+      "kafka.client.ssl.keystore.type": "PEM",
+      "kafka.client.ssl.truststore.location": "../cert/cacert.pem",
+      "kafka.client.ssl.truststore.type": "PEM"
+    }
+  }
+}

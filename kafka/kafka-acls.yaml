@@ -1,0 +1,84 @@
+---
+apiVersion: "kafka.jikkou.io/v1beta2"
+kind: "KafkaPrincipalRole"
+metadata:
+  name: "KafkaTopicProducer"
+spec:
+  acls:
+    - type: "ALLOW"
+      operations:
+        - "DESCRIBE"
+        - "IDEMPOTENT_WRITE"
+      resource:
+        type: "CLUSTER"
+        pattern: ".*"
+        patternType: "MATCH"
+      host: "*"
+    - type: "ALLOW"
+      operations:
+        - "DESCRIBE"
+        - "WRITE"
+      resource:
+        type: "TOPIC"
+        pattern: ".*"
+        patternType: "MATCH"
+      host: "*"
+    - type: "ALLOW"
+      operations:
+        - "DESCRIBE"
+        - "WRITE"
+      resource:
+        type: "TRANSACTIONAL_ID"
+        pattern: ".*"
+        patternType: "MATCH"
+      host: "*"
+---
+apiVersion: "kafka.jikkou.io/v1beta2"
+kind: "KafkaPrincipalRole"
+metadata:
+  name: "KafkaTopicConsumer"
+spec:
+  acls:
+    - type: "ALLOW"
+      operations:
+        - "DESCRIBE"
+      resource:
+        type: "CLUSTER"
+        pattern: ".*"
+        patternType: "MATCH"
+      host: "*"
+    - type: "ALLOW"
+      operations:
+        - "READ"
+        - "DESCRIBE"
+      resource:
+        type: "TOPIC"
+        pattern: ".*"
+        patternType: "MATCH"
+      host: "*"
+    - type: "ALLOW"
+      operations:
+        - "READ"
+        - "DESCRIBE"
+        - "ALTER"
+      resource:
+        type: "GROUP"
+        pattern: ".*"
+        patternType: "MATCH"
+      host: "*"
+---
+apiVersion: "kafka.jikkou.io/v1beta2"
+kind: "KafkaPrincipalAuthorization"
+metadata:
+  name: "User:producers"
+spec:
+  roles:
+    - "KafkaTopicProducer"
+---
+apiVersion: "kafka.jikkou.io/v1beta2"
+kind: "KafkaPrincipalAuthorization"
+metadata:
+  name: "User:consumers"
+spec:
+  roles:
+    - "KafkaTopicConsumer"

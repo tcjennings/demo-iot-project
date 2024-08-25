@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package iot.v1;
+
+// An IOT Sensor Reading will consist of some device ID
+// and a number of fields depending on the type of the IOT device
+
+// An enum of potentially supported IOT Sensor types,
+// where the enum value matches the id of a sensor_payload
+// message in the sensor reading oneof
+enum IotSensorType {
+    IOT_SENSOR_TYPE_UNSPECIFIED = 0;
+    IOT_SENSOR_TYPE_TEMP_HUMIDITY = 3;
+    IOT_SENSOR_TYPE_AIR_QUALITY = 4;
+    IOT_SENSOR_TYPE_OPEN_CLOSE = 5;
+    IOT_SENSOR_TYPE_LIGHT = 6;
+}
+
+message IotSensorReading {
+    bytes sensor_id = 1;  // the ID will be a 128-bit UUID
+    IotSensorType sensor_type = 2;
+    oneof sensor_payload {
+        IotTempHumidity temp_humidity_payload = 3;
+        IotAirQuality air_quality_payload = 4;
+        IotOpenClose open_close_payload = 5;
+        IotLight light_payload = 6;
+    }
+}
+
+// A sensor message that provides a temperature in celsius and
+// relative humidity as a percent
+message IotTempHumidity {
+    sint32 temperature_c = 100;
+    int32 rel_hum_pct = 101;
+}
+
+// A sensor message that provides air quality measurements including
+// carbon dioxide, carbon monoxide, and ozone as ppm
+message IotAirQuality {
+    int32 co2_ppm = 200;
+    int32 co_ppm = 201;
+    int32 o3_ppb = 202;
+}
+
+// A sensor message that provides the status of a reed sensor
+message IotOpenClose {
+    bool open = 300;
+}
+
+// A sensor message that provides a light measurement in lumens
+message IotLight {
+    int32 lumens = 400;
+    int32 temperture_k = 401;
+}

@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Server",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "python.libexec.server",
+            "args": [],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/src/",
+            "env": {
+                "IOT_SENSOR_TYPE": "IOT_SENSOR_TYPE_TEMP_HUMIDITY",
+                "IOT_LOGGING_LEVEL": "DEBUG"
+            }
+        }
+    ]
+}

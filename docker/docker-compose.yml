@@ -1,0 +1,90 @@
+version: "3.8"
+
+services:
+
+  # A single-broker Kafka service that exposes listeners that work both within and without the docker network.
+  # use port 29092 to connect from outside the docker network (localhost) or 29094 to connect from inside (kafka)
+  # port 29093 is used for the broker to talk to itself and is bound only to the broker's own loopback
+  # The Kafka cluster operates in KRaft quorum mode, so no zookeepers are necessary.
+  # Note: The listener name used is "TLS" instead of "SSL" because the confluent entrypoint configuration/validation
+  #       script specifies a behavior incompatible with unprotected PEM files when "SSL" is present in the list
+  #       of advertised listeners.
+  kafka:
+    image: confluentinc/cp-kafka:7.7.0
+    ports:
+      - "29092:29092"
+    environment:
+      CLUSTER_ID: swordfish
+      CONFLUENT_CURRENT: /opt/kafka
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@localhost:29093'
+      KAFKA_ADVERTISED_LISTENERS: "TLS://localhost:29092,DOCKER://kafka:29094"
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: TLS
+      KAFKA_LISTENERS: "TLS://0.0.0.0:29092,CONTROLLER://127.0.0.1:29093,DOCKER://0.0.0.0:29094"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "TLS:SSL,CONTROLLER:SSL,DOCKER:SSL"
+      KAFKA_SSL_KEYSTORE_LOCATION: /run/secrets/broker_keystore
+      KAFKA_SSL_KEYSTORE_TYPE: PEM
+      KAFKA_SSL_TRUSTSTORE_LOCATION: /run/secrets/broker_truststore
+      KAFKA_SSL_TRUSTSTORE_TYPE: PEM
+      KAFKA_SSL_CLIENT_AUTH: required
+      KAFKA_AUTHORIZER_CLASS_NAME: "org.apache.kafka.metadata.authorizer.StandardAuthorizer"
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_SSL_PRINCIPAL_MAPPING_RULES: >-
+        RULE:^CN=(.*?),OU=(.*?),.*$/$2/L,
+        DEFAULT
+      KAFKA_SUPER_USERS: "User:brokers;User:admins"
+    secrets:
+      - broker_keystore
+      - broker_truststore
+    volumes:
+      - kafka:/var/lib/kafka/data
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - 8080:8080
+    environment:
+      DYNAMIC_CONFIG_ENABLED: "true"
+      KAFKA_CLUSTERS_0_NAME: swordfish
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29094
+      KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: SSL
+      KAFKA_CLUSTERS_0_PROPERTIES_SSL_KEYSTORE_LOCATION: /run/secrets/admin_keystore
+      KAFKA_CLUSTERS_0_PROPERTIES_SSL_KEYSTORE_TYPE: PEM
+      KAFKA_CLUSTERS_0_SSL_TRUSTSTORELOCATION: /run/secrets/client_truststore
+      KAFKA_CLUSTERS_0_PROPERTIES_SSL_TRUSTSTORE_TYPE: PEM
+      KAFKA_CLUSTERS_0_SERDE_0_NAME: ProtobufFile
+      KAFKA_CLUSTERS_0_SERDE_0_PROPERTIES_PROTOBUFFILESDIR: /opt/protobuf/
+      KAFKA_CLUSTERS_0_SERDE_0_PROPERTIES_PROTOBUFMESSAGENAME: iot.v1.IotSensorReading
+    volumes:
+      - ../protobuf:/opt/protobuf
+    secrets:
+      - admin_keystore
+      - client_truststore
+
+  localstack:
+    image: localstack/localstack:3.6
+    ports:
+      - "127.0.0.1:4566:4566"            # LocalStack Gateway
+      - "127.0.0.1:4510-4559:4510-4559"  # external services port range
+    environment:
+      DEBUG: 1
+      PERSISTENCE: 0
+      SERVICES: acm, iam, sts
+    volumes:
+      - localstack:/var/lib/localstack"
+
+secrets:
+  broker_keystore:
+    file: ../cert/broker_ssl_keystore_location.pem
+  broker_truststore:
+    file: ../cert/broker_ssl_truststore_location.pem
+  admin_keystore:
+    file: ../cert/admin_ssl_keystore_location.pem
+  client_truststore:
+    file: ../cert/cacert.pem
+
+volumes:
+  kafka:
+  localstack:
