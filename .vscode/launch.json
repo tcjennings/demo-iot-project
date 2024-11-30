@@ -5,7 +5,7 @@
             "name": "Python Debugger: Server",
             "type": "debugpy",
             "request": "launch",
-            "module": "python.libexec.server",
+            "module": "iot_sample.libexec.server",
             "args": [],
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}/src/",

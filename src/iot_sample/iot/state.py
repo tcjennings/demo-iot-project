@@ -17,7 +17,7 @@ class State:
     sensor_payload_descriptor: FieldDescriptor
     message_model: BaseModel
     sensor_data_format: str | None
-    tasks: list
+    tasks: set
 
     def __init__(self):
         self.q = deque(maxlen=(settings.buffer_time_sec * settings.frequency))
@@ -32,7 +32,7 @@ class State:
             self.sensor_payload_descriptor.message_type
         )
         self.sensor_data_format = None
-        self.tasks = []
+        self.tasks = set()
 
 
 state = State()

@@ -2,9 +2,10 @@ from asyncio import sleep
 
 import google.protobuf.message_factory as message_factory
 
+from iot_proto.iot.v1 import iot_pb2
+
 from ..lib.kafka.producer import get_producer
 from ..lib.logging import logger
-from ..lib.proto.iot.v1 import iot_pb2
 from ..lib.utility import proto_tools
 from .settings import settings
 from .state import state

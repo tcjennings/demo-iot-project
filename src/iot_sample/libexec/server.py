@@ -7,6 +7,7 @@ import click
 import uvicorn
 from fastapi import FastAPI
 
+from .. import __version__
 from ..iot.producer import start_producer_loop
 from ..iot.reader import start_sensor_reader_loop
 from ..iot.state import state
@@ -19,8 +20,8 @@ async def lifespan(app: FastAPI):
     # start
     reader = create_task(start_sensor_reader_loop(), name="SensorReader")
     producer = create_task(start_producer_loop(), name="MessageProducer")
-    state.tasks.append(reader)
-    state.tasks.append(producer)
+    state.tasks.add(reader)
+    state.tasks.add(producer)
     yield
     # stop
     reader.cancel()
@@ -29,14 +30,17 @@ async def lifespan(app: FastAPI):
 @click.command()
 def main():
     # Create a FastAPI application using a custom lifespan context
-    app = FastAPI(lifespan=lifespan)
+    app = FastAPI(
+        lifespan=lifespan,
+        version=__version__,
+    )
 
     # Add router plugins to the FastAPI application
     app.include_router(health.router)
     app.include_router(status.router)
 
     # Run the FastAPI application with an ASGI web server
-    uvicorn.run(app)
+    uvicorn.run(app, host="0.0.0.0")
 
 
 if __name__ == "__main__":

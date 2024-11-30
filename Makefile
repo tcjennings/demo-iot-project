@@ -1,15 +1,16 @@
-PROTO_FILES := $(shell find protobuf/ -type f -name '*.proto')
-PROTO_PYTHON_DIR := src/python/lib/proto/
-SRC_PYTHON_DIR := src/python
+PROTO_DIR := packages/iot-proto/protobuf
+PROTO_FILES := $(shell find $(PROTO_DIR) -type f -name '*.proto')
+PROTO_PYTHON_DIR := packages/iot-proto/python/iot_proto
 PROTO_PYTHON_FILES := $(patsubst %.proto,$(PROTO_PYTHON_DIR)%_pb2.py,$(PROTO_FILES))
 PY_VENV := .venv/
+SRC_PYTHON_DIR := src/iot_sample
 TERRAFORM_INIT_DIR := terraform/.terraform
 TERRAFORM_STATE_FILE := terraform/terraform.tfstate
 
-.PHONY: bootstrap clean proto terraform
-
+.PHONY: bootstrap
 bootstrap: proto $(PY_VENV) terraform
 
+.PHONY: clean
 clean:
 	rm -rf cert/*.pem
 	rm -rf cert/*.key
@@ -20,8 +21,10 @@ clean:
 	rm -rf $(TERRAFORM_STATE_FILE).backup
 	find . -name "__pycache__" | xargs rm -rf
 
+.PHONY: proto
 proto: $(PROTO_PYTHON_DIR) $(PROTO_PYTHON_FILES)
 
+.PHONY: terraform
 terraform: $(TERRAFORM_STATE_FILE)
 
 $(PROTO_PYTHON_DIR):
@@ -29,10 +32,14 @@ $(PROTO_PYTHON_DIR):
 	touch $(PROTO_PYTHON_DIR)/__init__.py
 
 $(PROTO_PYTHON_FILES): $(PROTO_FILES)
-	protoc -I=protobuf --python_out=$(PROTO_PYTHON_DIR) $^
+	protoc -I=$(PROTO_DIR) --python_out=$(PROTO_PYTHON_DIR) $^
 
-$(PY_VENV):
-	uv sync
+uv.lock:
+	uv sync --no-install-project
+
+$(PY_VENV): export UV_FROZEN := true
+$(PY_VENV): uv.lock
+	uv sync --no-install-project
 
 $(TERRAFORM_STATE_FILE): $(TERRAFORM_INIT_DIR)
 	cd terraform && terraform apply -auto-approve
@@ -40,6 +47,12 @@ $(TERRAFORM_STATE_FILE): $(TERRAFORM_INIT_DIR)
 $(TERRAFORM_INIT_DIR):
 	cd terraform && terraform init -upgrade
 
+.PHONY: lint
 lint:
-	uvx ruff check $(SRC_PYTHON_DIR)
-	uvx ruff format $(SRC_PYTHON_DIR)
+	uv run ruff check $(SRC_PYTHON_DIR)
+	uv run ruff format $(SRC_PYTHON_DIR)
+
+.PHONY: release
+release: export GIT_COMMIT_AUTHOR="$(shell git config user.name) <$(shell git config user.email)>"
+release:
+	uv run semantic-release version --no-commit --no-push --no-vcs-release ---skip-build --no-changelog

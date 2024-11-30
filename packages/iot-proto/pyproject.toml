@@ -1,0 +1,19 @@
+[project]
+name = "iot-proto"
+dynamic = ["version"]
+requires-python = ">= 3.12"
+classifiers = ["Private :: Do Not Upload"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.sdist]
+ignore-vcs = true
+
+[tool.hatch.build.targets.wheel]
+ignore-vcs = true
+packages = ["python/iot_proto"]
+
+[tool.hatch.version]
+path = "python/iot_proto/__init__.py"

@@ -1,6 +1,48 @@
-version: "3.8"
+name: iot
 
 services:
+
+  server:
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile
+      target: runtime
+    environment:
+      KAFKA_bootstrap_servers: kafka:29094
+      KAFKA_ssl_ca_location: /run/secrets/client_truststore
+      KAFKA_ssl_certificate_location: /run/secrets/producer_truststore
+      KAFKA_ssl_key_location: /run/secrets/producer_keystore
+      KAFKA_TOPIC: "local.iot.sensor.readings"
+      IOT_SENSOR_TYPE: IOT_SENSOR_TYPE_TEMP_HUMIDITY
+      IOT_LOGGING_LEVEL: DEBUG
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+    networks:
+      - frontend
+    secrets:
+      - client_truststore
+      - producer_keystore
+      - producer_truststore
+
+  kafka-init:
+    image: streamthoughts/jikkou:latest
+    networks:
+      - frontend
+    depends_on:
+      kafka:
+        condition: service_started
+    environment:
+      JIKKOUCONFIG: /etc/jikkou/jikkou-config.conf
+    volumes:
+      - "../kafka:/etc/jikkou"
+    command:
+      - apply
+      - -f
+      - /etc/jikkou/kafka-topics.yaml
+    secrets:
+      - admin_keystore
+      - client_truststore
 
   # A single-broker Kafka service that exposes listeners that work both within and without the docker network.
   # use port 29092 to connect from outside the docker network (localhost) or 29094 to connect from inside (kafka)
@@ -11,6 +53,8 @@ services:
   #       of advertised listeners.
   kafka:
     image: confluentinc/cp-kafka:7.7.0
+    networks:
+      - frontend
     ports:
       - "29092:29092"
     environment:
@@ -45,6 +89,10 @@ services:
     image: provectuslabs/kafka-ui:latest
     ports:
       - 8080:8080
+    networks:
+      - frontend
+    profiles:
+      - full
     environment:
       DYNAMIC_CONFIG_ENABLED: "true"
       KAFKA_CLUSTERS_0_NAME: swordfish
@@ -58,13 +106,17 @@ services:
       KAFKA_CLUSTERS_0_SERDE_0_PROPERTIES_PROTOBUFFILESDIR: /opt/protobuf/
       KAFKA_CLUSTERS_0_SERDE_0_PROPERTIES_PROTOBUFMESSAGENAME: iot.v1.IotSensorReading
     volumes:
-      - ../protobuf:/opt/protobuf
+      - ../packages/iot-proto/protobuf:/opt/protobuf
     secrets:
       - admin_keystore
       - client_truststore
 
   localstack:
     image: localstack/localstack:3.6
+    profiles:
+      - aws
+    networks:
+      - frontend
     ports:
       - "127.0.0.1:4566:4566"            # LocalStack Gateway
       - "127.0.0.1:4510-4559:4510-4559"  # external services port range
@@ -84,7 +136,15 @@ secrets:
     file: ../cert/admin_ssl_keystore_location.pem
   client_truststore:
     file: ../cert/cacert.pem
+  producer_keystore:
+    file: ../cert/producer.key
+  producer_truststore:
+    file: ../cert/producer.pem
 
 volumes:
   kafka:
   localstack:
+
+networks:
+  frontend:
+    driver: bridge

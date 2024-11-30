@@ -1,3 +1,4 @@
+import sys
 from enum import Enum
 from struct import unpack
 
@@ -5,9 +6,10 @@ import google.protobuf.message_factory as message_factory
 from google.protobuf.descriptor import Descriptor, FieldDescriptor
 from pydantic import BaseModel, create_model
 
+from iot_proto.iot.v1 import iot_pb2
+
 from ...iot.settings import settings
 from ..logging import logger
-from ..proto.iot.v1 import iot_pb2
 
 PROTO_TYPES = {
     1: float,  # DOUBLE
@@ -51,16 +53,23 @@ def get_sensor_payload_descriptor(sensor_type: str) -> FieldDescriptor:
     # Using the payload id from the proto enum, based on the convention that the
     # enum value is the payload's field ID within the sensor_reading, we can get
     # its descriptor and use message_factory to create an instance of its message class
-    sensor_payload_descriptor: FieldDescriptor = (
-        iot_pb2.DESCRIPTOR.message_types_by_name["IotSensorReading"].fields_by_number[
-            sensor_payload_id
-        ]
-    )
+    try:
+        sensor_payload_descriptor: FieldDescriptor = (
+            iot_pb2.DESCRIPTOR.message_types_by_name["IotSensorReading"].fields_by_number[
+                sensor_payload_id
+            ]
+        )
+    except KeyError:
+        logger.error(
+            "No Sensor ID configured and no default given. "
+            "Set IOT_SENSOR_TYPE environment variable."
+        )
+        sys.exit(1)
     return sensor_payload_descriptor
 
 
 def model_from_proto_descriptor(descriptor: Descriptor) -> BaseModel:
-    """Given a protobuf msg descriptor, produce a simple pydantic model implementation.
+    """Given a protobuf message descriptor, produce a simple pydantic model implementation.
 
     This factory does not attempt to support all protobuf features, like nested messages, repeated fields, etc.,
     and implements only some well-known scalar types.

@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 # to decouple the router from the app, this state should be available
 # via middleware or dependency injection instead
@@ -21,11 +21,14 @@ async def get_health():
         if task.done():
             server_ok = False
             task_response["task_running"] = False
-            task_response["task_exception"] = task.exception()
+            task_response["task_exception"] = str(task.exception())
 
         health_response[task.get_name()] = task_response
 
-    health_response["server_status":server_ok]
+    health_response["server_status"] = server_ok
 
     # Should return code 500 if not server_ok
-    return health_response
+    if not server_ok:
+        raise HTTPException(status_code=500, detail=health_response)
+    else: 
+        return health_response

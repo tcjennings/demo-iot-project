@@ -4,4 +4,5 @@
 # allow only that which is needed in the docker build context
 !uv.lock
 !pyproject.toml
-!src/python/
+!src/iot_sample/
+!packages/

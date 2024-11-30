@@ -213,3 +213,4 @@ override.tf.json
 terraform.rc
 
 kafka/kafka_*/
+kafka/jikkou-*/
