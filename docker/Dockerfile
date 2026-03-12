@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 ARG PYTHON_VERSION=3.12
-ARG UV_VERSION=0.5
+ARG UV_VERSION=0.10
 
 ################################################################################
 # UV STAGE
@@ -56,7 +56,7 @@ FROM --platform=$TARGETPLATFORM gcr.io/distroless/cc-debian12:debug as runtime
 # from the builder image.
 WORKDIR /opt/python
 COPY --from=builder /opt/python .
-ENV PATH=/opt/python/.venv/bin:$PATH
+ENV PATH=/opt/python/venv/bin:$PATH
 
 # copies the application package into a working directory associated with a nonroot user
 # sets the container entrypoint to run python with the module flag; this ensures the

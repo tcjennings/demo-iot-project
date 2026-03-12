@@ -9,6 +9,7 @@ TERRAFORM_STATE_FILE := terraform/terraform.tfstate
 
 .PHONY: bootstrap
 bootstrap: proto $(PY_VENV) terraform
+	uv run pre-commit install
 
 .PHONY: clean
 clean:
@@ -49,10 +50,17 @@ $(TERRAFORM_INIT_DIR):
 
 .PHONY: lint
 lint:
-	uv run ruff check $(SRC_PYTHON_DIR)
-	uv run ruff format $(SRC_PYTHON_DIR)
+	uv run pre-commit run --all-files
+
+.PHONY: typing
+typing:
+	uv run ty check
 
 .PHONY: release
 release: export GIT_COMMIT_AUTHOR="$(shell git config user.name) <$(shell git config user.email)>"
 release:
 	uv run semantic-release version --no-commit --no-push --no-vcs-release ---skip-build --no-changelog
+
+.PHONY: test
+test:
+	uv run pytest src/python_tests/ --cov=src/iot_sample/iot --cov-report=term-missing

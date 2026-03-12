@@ -30,25 +30,25 @@ message IotSensorReading {
 // A sensor message that provides a temperature in celsius and
 // relative humidity as a percent
 message IotTempHumidity {
-    sint32 temperature_c = 100;
-    int32 rel_hum_pct = 101;
+    sint32 temperature_c = 301;
+    int32 rel_hum_pct = 302;
 }
 
 // A sensor message that provides air quality measurements including
 // carbon dioxide, carbon monoxide, and ozone as ppm
 message IotAirQuality {
-    int32 co2_ppm = 200;
-    int32 co_ppm = 201;
-    int32 o3_ppb = 202;
+    int32 co2_ppm = 401;
+    int32 co_ppm = 402;
+    int32 o3_ppb = 403;
 }
 
 // A sensor message that provides the status of a reed sensor
 message IotOpenClose {
-    bool open = 300;
+    bool open = 501;
 }
 
 // A sensor message that provides a light measurement in lumens
 message IotLight {
-    int32 lumens = 400;
-    int32 temperture_k = 401;
+    int32 lumens = 601;
+    int32 temperture_k = 602;
 }

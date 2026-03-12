@@ -17,8 +17,7 @@ from confluent_kafka.serialization import Deserializer, SerializationContext, Se
 
 
 class ProtoBufSerializer(Serializer):
-    """Basic serializer for transmitting a protobuf message as
-    bytes to a Kafka topic.
+    """Basic serializer for transmitting a protobuf message as bytes to a Kafka topic.
 
     Notes
     -----
@@ -27,7 +26,7 @@ class ProtoBufSerializer(Serializer):
 
     def __init__(self, msg_type): ...
 
-    def __call__(self, msg, ctx: SerializationContext | None = None):
+    def __call__(self, msg, ctx: SerializationContext | None = None):  # type: ignore[invalid-method-override]
         """
         Converts protobuf message to bytes.
 

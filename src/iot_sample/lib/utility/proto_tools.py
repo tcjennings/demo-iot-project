@@ -1,9 +1,9 @@
 import sys
-from enum import Enum
 from struct import unpack
 
 import google.protobuf.message_factory as message_factory
 from google.protobuf.descriptor import Descriptor, FieldDescriptor
+from google.protobuf.message import Message
 from pydantic import BaseModel, create_model
 
 from iot_proto.iot.v1 import iot_pb2
@@ -11,27 +11,44 @@ from iot_proto.iot.v1 import iot_pb2
 from ...iot.settings import settings
 from ..logging import logger
 
+
+class _UnsupportedType:
+    """Sentinel class representing unsupported protobuf type."""
+
+    pass
+
+
 PROTO_TYPES = {
-    1: float,  # DOUBLE
-    2: float,  # FLOAT
-    3: int,  # INT64
-    4: int,  # UINT64
-    5: int,  # INT32
-    6: int,  # FIXED64
-    7: int,  # FIXED32
-    8: bool,  # BOOL
-    9: str,  # STRING
-    10: list,  # GROUP
-    11: dict,  # MESSAGE
-    12: bytes,  # BYTES
-    13: int,  # UINT32
-    14: Enum,  # ENUM
-    15: int,  # SFIXED32
-    16: int,  # SFIXED64
-    17: int,  # SINT32
-    18: int,  # SINT64
+    FieldDescriptor.TYPE_DOUBLE: float,
+    FieldDescriptor.TYPE_FLOAT: float,
+    FieldDescriptor.TYPE_INT64: int,
+    FieldDescriptor.TYPE_UINT64: int,
+    FieldDescriptor.TYPE_INT32: int,
+    FieldDescriptor.TYPE_FIXED64: int,
+    FieldDescriptor.TYPE_FIXED32: int,
+    FieldDescriptor.TYPE_BOOL: bool,
+    FieldDescriptor.TYPE_STRING: str,
+    FieldDescriptor.TYPE_GROUP: _UnsupportedType,
+    FieldDescriptor.TYPE_MESSAGE: _UnsupportedType,
+    FieldDescriptor.TYPE_BYTES: bytes,
+    FieldDescriptor.TYPE_UINT32: int,
+    FieldDescriptor.TYPE_ENUM: int,
+    FieldDescriptor.TYPE_SFIXED32: int,
+    FieldDescriptor.TYPE_SFIXED64: int,
+    FieldDescriptor.TYPE_SINT32: int,
+    FieldDescriptor.TYPE_SINT64: int,
 }
-"""A naive mapping of protobuf type constants available as FieldDescriptor.TYPE_* to Python native types."""
+"""Maps protobuf scalar type constants to Python native types for Pydantic model generation.
+
+This mapping is intentionally limited to scalar types only. Complex types like nested
+messages (TYPE_MESSAGE), groups (TYPE_GROUP), and repeated fields require special handling
+and are not supported by this mapping. Enum fields are mapped to int since protobuf enums
+serialize to integer values.
+
+Note: Python's int type is unbounded, so unsigned and fixed-size integer types (UINT32,
+UINT64, FIXED32, FIXED64, SFIXED32, SFIXED64) map correctly to int but don't enforce
+the protobuf size/signedness constraints at the Python level.
+"""
 
 
 def get_sensor_payload_descriptor(sensor_type: str) -> FieldDescriptor:
@@ -55,9 +72,9 @@ def get_sensor_payload_descriptor(sensor_type: str) -> FieldDescriptor:
     # its descriptor and use message_factory to create an instance of its message class
     try:
         sensor_payload_descriptor: FieldDescriptor = (
-            iot_pb2.DESCRIPTOR.message_types_by_name["IotSensorReading"].fields_by_number[
-                sensor_payload_id
-            ]
+            iot_pb2.DESCRIPTOR.message_types_by_name[
+                "IotSensorReading"
+            ].fields_by_number[sensor_payload_id]
         )
     except KeyError:
         logger.error(
@@ -82,12 +99,12 @@ def model_from_proto_descriptor(descriptor: Descriptor) -> BaseModel:
 
     return create_model(
         descriptor.name,
-        **fields_dict,  # type: ignore
+        **fields_dict,
     )  # type: ignore
 
 
 def get_sensor_reading_model(
-    reading: bytes, reading_struct_format: str, message_model
+    reading: bytes, reading_struct_format: str, message_model: BaseModel
 ) -> BaseModel:
     """Returns an IOT Sensor Reading payload as a Pydantic model instance.
 
@@ -112,8 +129,8 @@ def proto_message_from_sensor_bytes(
     reading: bytes,
     reading_struct_format: str,
     field_descriptor: FieldDescriptor,
-    message_model,
-):
+    message_model: BaseModel,
+) -> Message:
     """Returns a protobuf message built from the bytes of a sensor reading. Accesses application
     setting and state for runtime values.
     """
@@ -130,9 +147,9 @@ def proto_message_from_sensor_bytes(
     )
 
     # Create and populate a sensor_payload message with the current reading
-    sensor_payload = message_factory.GetMessageClass(
-        field_descriptor.message_type  # type: ignore
-    )(**reading_object.model_dump())
+    sensor_payload = message_factory.GetMessageClass(field_descriptor.message_type)(
+        **reading_object.model_dump()
+    )
 
     # Using the getattr method, we can access variable or dynamic field names in the
     # sensor_reading protobuf message, then use the CopyFrom method to apply another

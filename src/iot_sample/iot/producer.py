@@ -46,7 +46,7 @@ async def start_producer_loop():
                 # Create and populate a sensor_payload protobuf message with the current message
                 # todo replace with proto_message_from_sensor_bytes
                 sensor_payload = message_factory.GetMessageClass(
-                    state.sensor_payload_descriptor.message_type  # type: ignore
+                    state.sensor_payload_descriptor.message_type
                 )(**message_object.model_dump())
 
                 # Using the getattr method, we can access variable or dynamic field names in the

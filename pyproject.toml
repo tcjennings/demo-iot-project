@@ -4,7 +4,7 @@ dynamic = ["version"]
 requires-python = ">= 3.12"
 
 dependencies = [
-    "protobuf>5,<6",
+    "protobuf>=7.34.0",
     "pydantic-settings>=2.4.0",
     "google>=3.0.0",
     "fastapi>=0.112.0",
@@ -17,6 +17,18 @@ dependencies = [
     "iot-proto",
 ]
 
+[dependency-groups]
+dev = [
+    "python-semantic-release>=9.14.0",
+    "ruff>=0.12.0",
+    "fastapi[standard]>=0.112.0",
+    "pre-commit>=4.2.0",
+    "pytest>=9.0.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "ty>=0.0.21",
+]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -26,14 +38,6 @@ packages = ["src/iot_sample"]
 
 [tool.hatch.version]
 path = "src/iot_sample/__init__.py"
-
-[dependency-groups]
-dev = [
-    "python-semantic-release>=9.14.0",
-    "ruff>=0.8.0",
-    "fastapi[standard]>=0.112.0",
-    "pytest>=8.3.3",
-]
 
 # Specifies a package that is a workspace member; this is applied to all members
 # of the workspace
@@ -104,3 +108,11 @@ upload_to_vcs_release = false
 [tool.semantic_release.remote]
 name = "gitea"
 type = "gitea"
+
+[tool.pytest]
+minversion = "9.0"
+asyncio_mode = "auto"
+testpaths = ["src/python_tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]

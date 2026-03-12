@@ -16,7 +16,7 @@ make bootstrap
 
 - This project has been assembled and tested with `podman >= 5.20` and should work with Docker just as well.
   - `podman`
-  - `podman-compose`
+  - `podman compose`
   - or; `docker`
 
 # Framework
