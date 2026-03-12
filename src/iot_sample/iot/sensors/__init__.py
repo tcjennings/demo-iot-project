@@ -22,6 +22,7 @@ fake = Faker()
 class IotSensor(abc.ABC):
     byte_order = ">"  # big-endian
     format_string = ""  # format string used by struct.pack
+    sensor_type = "IOT_SENSOR_TYPE_UNSPECIFIED"  # Name of the sensor type used in the matching protobuf message
     version = 1  # version number for the sensor
 
     def __call__(self):

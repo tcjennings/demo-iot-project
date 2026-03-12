@@ -185,12 +185,17 @@ class TestReaderWithDifferentSensors:
         self, sensor_type, expected_format, expected_byte_len, monkeypatch
     ):
         """Test that reader sets correct format string for each sensor type."""
+        from iot_sample.iot.settings import _settings
+
+        # Create fresh settings instance with the desired sensor type
         monkeypatch.setenv("IOT_SENSOR_TYPE", sensor_type)
         monkeypatch.setenv("IOT_FREQUENCY", "10")
+        test_settings = _settings()
 
-        # Reset state for clean test
+        # Reset state for clean test with the sensor type
         test_state = state.State()
         monkeypatch.setattr("iot_sample.iot.reader.state", test_state)
+        monkeypatch.setattr("iot_sample.iot.reader.settings", test_settings)
 
         # Start the reader loop
         task = asyncio.create_task(reader.start_sensor_reader_loop())
@@ -202,22 +207,25 @@ class TestReaderWithDifferentSensors:
         except asyncio.CancelledError:
             pass
 
-        # Note: reader currently hardcodes TempHumiditySensor, so this test
-        # documents current behavior rather than desired behavior
-        # The sensor_data_format will always be ">iI" until reader.py is updated
-        # to be dynamic based on sensor_type setting
+        # Verify that the reader dynamically set the correct format for the sensor type
+        assert test_state.sensor_data_format == expected_format
 
     @pytest.mark.asyncio
     async def test_reader_produces_correct_byte_length_for_sensor(
         self, sensor_type, expected_format, expected_byte_len, monkeypatch
     ):
         """Test that reader produces correct byte length for each sensor type."""
+        from iot_sample.iot.settings import _settings
+
+        # Create fresh settings instance with the desired sensor type
         monkeypatch.setenv("IOT_SENSOR_TYPE", sensor_type)
         monkeypatch.setenv("IOT_FREQUENCY", "10")
+        test_settings = _settings()
 
-        # Reset state for clean test
+        # Reset state for clean test with the sensor type
         test_state = state.State()
         monkeypatch.setattr("iot_sample.iot.reader.state", test_state)
+        monkeypatch.setattr("iot_sample.iot.reader.settings", test_settings)
 
         # Start the reader loop
         task = asyncio.create_task(reader.start_sensor_reader_loop())
@@ -229,6 +237,6 @@ class TestReaderWithDifferentSensors:
         except asyncio.CancelledError:
             pass
 
-        # Note: Currently reader hardcodes TempHumiditySensor, so all readings
-        # will be 8 bytes regardless of sensor_type setting
-        # This test documents that limitation
+        # Verify that the reader produces readings with the correct byte length for the sensor type
+        if len(test_state.q) > 0:
+            assert all(len(reading) == expected_byte_len for reading in test_state.q)

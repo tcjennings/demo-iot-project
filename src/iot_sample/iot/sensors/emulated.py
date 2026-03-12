@@ -1,10 +1,14 @@
 """Implements a set of emulated Sensor classes for IOT hardware."""
 
+import inspect
+import sys
+
 from . import IotSensor, fake
 
 
 class TempHumiditySensor(IotSensor):
     format_string = "iI"
+    sensor_type = "IOT_SENSOR_TYPE_TEMP_HUMIDITY"
 
     def get_measurement(self) -> tuple:
         """Returns a tuple of sensor readings, i.e., (temperature_c, rel_hum_pct)"""
@@ -25,6 +29,7 @@ class AirQualitySensor(IotSensor):
     """
 
     format_string = "HHH"
+    sensor_type = "IOT_SENSOR_TYPE_AIR_QUALITY"
 
     def get_measurement(self) -> tuple:
         """Returns a tuple of sensor readings, i.e., (co2_ppm, co_ppm, o3_ppb)"""
@@ -44,6 +49,7 @@ class OpenCloseSensor(IotSensor):
     """
 
     format_string = "?"
+    sensor_type = "IOT_SENSOR_TYPE_OPEN_CLOSE"
 
     def get_measurement(self) -> tuple:
         """Returns a tuple of sensor readings, i.e., (open/close,)"""
@@ -65,8 +71,19 @@ class LightSensor(IotSensor):
 
     version = 2
     format_string = "HH"
+    sensor_type = "IOT_SENSOR_TYPE_LIGHT"
 
     def get_measurement(self) -> tuple:
         lumens = fake.pyint(min_value=600, max_value=1500)
         color_temp_k = fake.pyint(min_value=2700, max_value=5400)
         return (lumens, color_temp_k)
+
+
+def sensor_type_factory(sensor_type: str) -> type[IotSensor]:
+    """Returns an `IotSensor` class for a sensor based on its type, by matching
+    the ``sensor_type`` attribute of available classes in this module.
+    """
+    for _, o in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+        if issubclass(o, IotSensor) and sensor_type == o.sensor_type:
+            return o
+    return IotSensor

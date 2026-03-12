@@ -12,9 +12,8 @@ async def start_sensor_reader_loop():
     """
 
     # Create an instance of an emulated IOT sensor
-    iot_sensor = (
-        emulated.TempHumiditySensor()
-    )  # this should be dynamic based on the sensor-type
+    sensor_type_class = emulated.sensor_type_factory(settings.sensor_type)
+    iot_sensor = sensor_type_class()
 
     # Update application state with the sensor's data format string
     state.sensor_data_format = f"{iot_sensor.byte_order}{iot_sensor.format_string}"
