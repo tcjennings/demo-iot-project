@@ -1,4 +1,4 @@
-# Terraform module to generate client and server certificates
+# IAC module to generate client and server certificates
 # for a nominally mtls application. The CAs involved are defined
 # in the `pki.tf` file
 

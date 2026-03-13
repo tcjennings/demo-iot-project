@@ -7,7 +7,7 @@ The top-level `config/admin_client.properties` may be used to configure the Kafk
 ## List the topics / verify operation
 
 ```
-./kafka/kafka_2.13-3.7.1/bin/kafka-topics.sh --bootstrap-server localhost:29092 \
+./kafka/kafka_2.13-3.9.2/bin/kafka-topics.sh --bootstrap-server localhost:29092 \
 --command-config config/admin_client.properties \
 --list
 ```
@@ -17,16 +17,16 @@ The top-level `config/admin_client.properties` may be used to configure the Kafk
 If topic auto-creation is disabled, then a topic must be created by an admin user before any producer or consumer clients can use it.
 
 ```
-./kafka/kafka_2.13-3.7.1/bin/kafka-topics.sh --bootstrap-server localhost:29092 \
+./kafka/kafka_2.13-3.9.2/bin/kafka-topics.sh --bootstrap-server localhost:29092 \
 --command-config config/admin_client.properties \
---topic local.iot.sensor.readings
+--topic local.iot.sensor.readings --create
 ```
 
 ## Add ACLs for Producers and Consumers
 
 ### Producers get WO
 ```
-./kafka/kafka_2.13-3.7.1/bin/kafka-acls.sh --bootstrap-server localhost:29092 \
+./kafka/kafka_2.13-3.9.2/bin/kafka-acls.sh --bootstrap-server localhost:29092 \
 --command-config config/admin_client.properties \
 --add --allow-principal "User:producers" \
 --topic "*" \
@@ -35,7 +35,7 @@ If topic auto-creation is disabled, then a topic must be created by an admin use
 
 ### Consumers get RO
 ```
-./kafka/kafka_2.13-3.7.1/bin/kafka-acls.sh --bootstrap-server localhost:29092 \
+./kafka/kafka_2.13-3.9.2/bin/kafka-acls.sh --bootstrap-server localhost:29092 \
 --command-config config/admin_client.properties \
 --add --allow-principal "User:consumers" \
 --topic "*" \

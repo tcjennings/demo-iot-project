@@ -1,4 +1,4 @@
-# Terraform module for creating an offline PKI with a root CA and two subordinate
+# IAC module for creating an offline PKI with a root CA and two subordinate
 # CAs, one for servers and one for clients, to approximate the requirements of an
 # mTLS application
 

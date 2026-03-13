@@ -51,15 +51,15 @@ services:
   # Note: The listener name used is "TLS" instead of "SSL" because the confluent entrypoint configuration/validation
   #       script specifies a behavior incompatible with unprotected PEM files when "SSL" is present in the list
   #       of advertised listeners.
+  # Note: The CLUSTER_ID is the output of the `bin/kafka-storage.sh random-uuid` client command and is not remarkable
   kafka:
-    image: confluentinc/cp-kafka:7.7.0
+    image: apache/kafka-native:3.9.2
     networks:
       - frontend
     ports:
       - "29092:29092"
     environment:
-      CLUSTER_ID: swordfish
-      CONFLUENT_CURRENT: /opt/kafka
+      CLUSTER_ID: 5kghdvLsSX6nUlZ_pSGtoQ
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_CONTROLLER_QUORUM_VOTERS: '1@localhost:29093'

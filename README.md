@@ -3,7 +3,7 @@
 - `uv`
 - `protoc`
 - `make`
-- `terraform`
+- `tofu` (or a `terraform` equivalent)
 
 This project uses `uv` as a project manager. To bootstrap this project, follow these steps:
 
@@ -14,10 +14,8 @@ make bootstrap
 
 ## Docker or Equivalent
 
-- This project has been assembled and tested with `podman >= 5.20` and should work with Docker just as well.
-  - `podman`
-  - `podman compose`
-  - or; `docker`
+This project has been assembled and tested with `podman >= 5.20` and should work with Docker just as well.
+The `docker/` directory includes a multi-stage `Dockerfile` for building a service container and `docker-compose.yml` file for setting up a complete stack of services.
 
 # Framework
 
@@ -81,13 +79,15 @@ The implementation of this message queue producer is based on an environment in 
 where the authentication and authorization of the client is performed with mutual TLS. This authentication scheme is supported by Kafka and is consistent
 with the AWS IoT Core services, which use MQTT instead of Kafka.
 
-## Terraform and PKI
+## Infrastructure and PKI
+*This project assumes the use of [OpenTofu](https://opentofu.org) but any Terraform equivalent should work.*
 
-The PKI used by this project is bootstrapped by a terraform module located in the `terraform/` directory. It creates a Root CA and a pair of Intermediate CAs,
+The PKI used by this project is bootstrapped by an infrastructure module located in the `iac/` directory. It creates a Root CA and a pair of Intermediate CAs,
 one for server certificates and one for clients. Finally, it generates and signs with these CAs a set of certificates that can be used by a Kafka broker and
 a Kafka client (producer/consumer/admin).
 
 The artifacts associated with this PKI are created in the `cert/` directory, and include both keystore (private keys) and truststore (public certificate) files.
+
 
 ## Kafka
 
@@ -111,6 +111,8 @@ one for the Kafka broker itself and three for different sorts of clients:
 
 Performing Kafka AdminAPI actions is necessary to create topics and apply topic ACLs after the cluster has started. This can be done with the official Kafka client or a gitops tool
 like `jikkou`. The `kafka/` directory has instructions and configuration files applicable to the AdminAPI actions necessary.
+
+*The compose file uses a "kafka-native" image which is designed for non-production or testing environments. This image train was introduced with the Kafka 3.8 release.*
 
 ## Kafka UI
 
@@ -141,3 +143,5 @@ The project can be built into an OCI image for use with Docker, Podman, Kubernet
 
 ## Directly
 The project can be run directly after it has been bootstrapped (`make bootstrap`) and the virtual environment has been activated (`source .venv/bin/activate`).
+
+Running the project directly assumes the availability of a Kafka broker. Use the `.env.sample` as a template for a `.env` for service configuration.

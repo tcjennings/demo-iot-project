@@ -16,4 +16,4 @@ Kafka broker in KRaFT mode with listeners configured to support connections from
 the Docker network and from the host.
 
 - Localstack. This service provides emulation of any AWS cloud services that may be consumed
-by the application or managed by Terraform.
+by the application or managed by IAC tools.
