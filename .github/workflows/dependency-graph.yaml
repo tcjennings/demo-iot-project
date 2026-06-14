@@ -1,0 +1,51 @@
+---
+name: "Update and Review Dependency Graph"
+
+"on":
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v6
+
+      - name: Detect and Submit Dependency Graph
+        id: detect
+        uses: advanced-security/component-detection-dependency-submission-action@v0.1.1
+        with:
+          detectorsFilter: |
+            UvLock
+          detectorArgs: |
+            UvLock=EnableIfDefaultOff
+
+      - name: Save component-detection output to file
+        run: |
+          echo "${{ steps.detect.outputs.snapshot }}"
+          if [ -f ./output.json ]; then
+            cat ./output.json
+          fi
+
+      - name: Translate snapshot -> simple requirements.txt (pip)
+        if: false
+        run: |
+          echo "${{ steps.detect.outputs.snapshot }}" |
+          jq -r '.components[] | select(.purl | test("^pkg:pypi/")) | .purl' dependency-submission.json > pip-purls.txt
+
+          # Convert purl to name==version for a basic requirements.txt (pkg:pypi/packagename@version)
+          awk -F'[/:@]' '
+            { split($0, a, "@"); p=a[1]; sub("pkg:pypi/","",p); v=a[2]; if(v=="") print p; else print p "==" v }
+          ' pip-purls.txt > requirements.txt || true
+          ls -la requirements.txt || true
+          cat requirements.txt || true
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v5
+        with:
+          comment-summary-in-pr: always
