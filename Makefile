@@ -67,3 +67,9 @@ release:
 .PHONY: test
 test:
 	uv run pytest src/python_tests/ --cov=src/iot_sample/iot --cov-report=term-missing
+
+.PHONY: server
+server: export IOT_SENSOR_TYPE=IOT_SENSOR_TYPE_TEMP_HUMIDITY
+server: export IOT_LOGGING_LEVEL=DEBUG
+server:
+	uv run python3 -m iot_sample.libexec.server

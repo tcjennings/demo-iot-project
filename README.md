@@ -145,3 +145,7 @@ The project can be built into an OCI image for use with Docker, Podman, Kubernet
 The project can be run directly after it has been bootstrapped (`make bootstrap`) and the virtual environment has been activated (`source .venv/bin/activate`).
 
 Running the project directly assumes the availability of a Kafka broker. Use the `.env.sample` as a template for a `.env` for service configuration.
+
+```
+uv run python3 -m iot_sample.libexec.server
+```
