@@ -1,0 +1,41 @@
+---
+name: "Update and Review Dependency Graph"
+
+"on":
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # 7.0.1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          version: "latest-known"
+          enable-cache: true
+
+      - name: Turn uv.lock into a pylock.toml (PEP751)
+        run: >
+          uv export --frozen --format pylock.toml
+          --all-groups --all-packages --all-extras
+          --no-annotate --no-emit-workspace --no-hashes
+          --output-file ./dist/pylock.toml
+
+      # Base dependency graph detection and review, results may not be accurate
+      # concerning vcs-based dependencies
+      - name: Detect and Submit Dependency Graph
+        id: detect
+        uses: advanced-security/component-detection-dependency-submission-action@b282c67b1008fde9b60da4bdfcd8849613e293b2  # v.0.1.6
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294  # v5.0.0
+        with:
+          comment-summary-in-pr: always
