@@ -16,14 +16,30 @@ jobs:
       - name: 'Checkout Repository'
         uses: actions/checkout@v6
 
+      # The UvLock detector component is not feature complete and therefore not
+      # suitable for purpose. In its present state, it does not follow dependencies
+      # in arbitrary groups, does not consider alternate sources, etc.
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          version: "0.11.x"
+          enable-cache: true
+
+      - name: Turn uv.lock into a SBOM
+        id: uv-to-requirements
+        run: >
+          uv export --frozen --format cyclonedx1.5
+          --all-groups --all-packages --all-extras
+          --no-annotate --no-emit-workspace --no-hashes
+          --output-file sbom.json
+
       - name: Detect and Submit Dependency Graph
         id: detect
         uses: advanced-security/component-detection-dependency-submission-action@v0.1.1
         with:
-          detectorsFilter: |
-            UvLock
-          detectorArgs: |
-            UvLock=EnableIfDefaultOff
+          filePath: sbom.json
+          # detectorsFilter: PipReport
+          # detectorArgs: Pip=EnableIfDefaultOff
 
       - name: Save component-detection output to file
         run: |
@@ -31,19 +47,6 @@ jobs:
           if [ -f ./output.json ]; then
             cat ./output.json
           fi
-
-      - name: Translate snapshot -> simple requirements.txt (pip)
-        if: false
-        run: |
-          echo "${{ steps.detect.outputs.snapshot }}" |
-          jq -r '.components[] | select(.purl | test("^pkg:pypi/")) | .purl' dependency-submission.json > pip-purls.txt
-
-          # Convert purl to name==version for a basic requirements.txt (pkg:pypi/packagename@version)
-          awk -F'[/:@]' '
-            { split($0, a, "@"); p=a[1]; sub("pkg:pypi/","",p); v=a[2]; if(v=="") print p; else print p "==" v }
-          ' pip-purls.txt > requirements.txt || true
-          ls -la requirements.txt || true
-          cat requirements.txt || true
 
       - name: Dependency Review
         uses: actions/dependency-review-action@v5

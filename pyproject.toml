@@ -16,6 +16,7 @@ dependencies = [
     "faker>=28.4.1",
     "websockets>=13.0.1",
     "iot-proto",
+    "lsst-utils",
 ]
 
 [dependency-groups]
@@ -44,6 +45,7 @@ path = "src/iot_sample/__init__.py"
 # of the workspace
 [tool.uv.sources]
 iot-proto = { workspace = true }
+lsst-utils = { git = "https://github.com/lsst/utils", branch = "tickets/DM-42273" }
 
 [tool.uv.workspace]
 members = ["packages/*"]
