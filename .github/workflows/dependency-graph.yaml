@@ -49,3 +49,5 @@ jobs:
         uses: actions/dependency-review-action@v5
         with:
           comment-summary-in-pr: always
+          retry-on-snapshot-warnings: true
+          retry-on-snapshot-warnings-timeout: 120
