@@ -12,18 +12,20 @@ from ..iot.producer import start_producer_loop
 from ..iot.reader import start_sensor_reader_loop
 from ..iot.state import state
 from ..routers.internal import health
-from ..routers.state import status
+from ..routers.state import statistics, status
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # start
+    state.fastapi = app
     reader = create_task(start_sensor_reader_loop(), name="SensorReader")
     producer = create_task(start_producer_loop(), name="MessageProducer")
     state.tasks.add(reader)
     state.tasks.add(producer)
     yield
     # stop
+    producer.cancel()
     reader.cancel()
 
 
@@ -38,6 +40,7 @@ def main():
     # Add router plugins to the FastAPI application
     app.include_router(health.router)
     app.include_router(status.router)
+    app.include_router(statistics.router)
 
     # Run the FastAPI application with an ASGI web server
     uvicorn.run(app, host="0.0.0.0")
