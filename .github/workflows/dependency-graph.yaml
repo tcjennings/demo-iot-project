@@ -1,0 +1,33 @@
+---
+name: "Update and Review Dependency Graph"
+
+"on":
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # 7.0.1
+
+      - name: Detect and Submit Dependency Graph
+        id: detect
+        uses: advanced-security/component-detection-dependency-submission-action@b282c67b1008fde9b60da4bdfcd8849613e293b2  # v.0.1.6
+        with:
+          detectorsFilter: |
+            UvLock
+          detectorArgs: |
+            UvLock=EnableIfDefaultOff
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294  # v5.0.0
+        with:
+          comment-summary-in-pr: always
+          retry-on-snapshot-warnings: true
+          retry-on-snapshot-warnings-timeout: 30
