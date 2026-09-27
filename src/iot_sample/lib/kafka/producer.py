@@ -10,10 +10,14 @@ Any messages produced to a Kafka topic will be keyed using the sensor ID as set 
 settings.
 """
 
+from types import TracebackType
+
 from confluent_kafka import KafkaException, Message, Producer
 
+from ...iot.state import state
 from ..logging import logger
 from .settings import kafka_settings, producer_settings
+from .stats import RdKafkaStats
 
 
 class IotProducer(Producer):
@@ -46,9 +50,12 @@ class IotProducer(Producer):
             logger.warning(f"Failed to deliver message: {err}")
 
     @classmethod
-    def stats_cb(cls, json_str):
+    def stats_cb(cls, json_str: str):
         """A callback method for handling statistics reporting."""
-        logger.debug(json_str)
+        try:
+            state.statistics = RdKafkaStats.model_validate_json(json_str)
+        except Exception as e:
+            logger.error(e)
 
     def shutdown(self):
         """Called when we are done with the producer."""
@@ -58,7 +65,12 @@ class IotProducer(Producer):
         """Allows use of the producer as a context manager."""
         return self
 
-    def __exit__(self, exc_type, exc_value, exc_traceback):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_traceback: TracebackType | None,
+    ):
         return self.shutdown()
 
 
